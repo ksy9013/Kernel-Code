@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: GPL-2.0-only */
+/*SPDX-License-Identifier: GPL-2.0-only */
 /*
  * syscalls.h - Linux syscall interfaces (non-arch-specific)
  *
@@ -9,6 +9,7 @@
 #ifndef _LINUX_SYSCALLS_H
 #define _LINUX_SYSCALLS_H
 
+struct proc_stat;
 struct __aio_sigset;
 struct epoll_event;
 struct iattr;
@@ -1119,6 +1120,8 @@ asmlinkage long sys_sysctl(struct __sysctl_args __user *args);
 asmlinkage long sys_sysfs(int option,
 				unsigned long arg1, unsigned long arg2);
 asmlinkage long sys_fork(void);
+asmlinkage long sys_hello(void);
+asmlinkage long sys_procstat(int pid, struct proc_stat * proc_ptr);
 
 /* obsolete: kernel/time/time.c */
 asmlinkage long sys_stime(__kernel_old_time_t __user *tptr);

@@ -49,6 +49,7 @@
 #include <linux/user_namespace.h>
 #include <linux/time_namespace.h>
 #include <linux/binfmts.h>
+#include <linux/procstat.h>
 
 #include <linux/sched.h>
 #include <linux/sched/autogroup.h>
@@ -902,6 +903,7 @@ SYSCALL_DEFINE1(setfsgid, gid_t, gid)
  *
  * This is SMP safe as current->tgid does not change.
  */
+
 SYSCALL_DEFINE0(getpid)
 {
 	return task_tgid_vnr(current);
@@ -1017,6 +1019,8 @@ COMPAT_SYSCALL_DEFINE1(times, struct compat_tms __user *, tbuf)
  *
  * !PF_FORKNOEXEC check to conform completely to POSIX.
  */
+
+
 SYSCALL_DEFINE2(setpgid, pid_t, pid, pid_t, pgid)
 {
 	struct task_struct *p;
@@ -2622,6 +2626,54 @@ SYSCALL_DEFINE1(sysinfo, struct sysinfo __user *, info)
 
 	if (copy_to_user(info, &val, sizeof(struct sysinfo)))
 		return -EFAULT;
+
+	return 0;
+}
+
+SYSCALL_DEFINE0(hello)
+{
+	printk( KERN_WARNING "Seonyoung Kim	1001757188\n");
+	return 0;
+}
+
+SYSCALL_DEFINE2(procstat, int ,pid, struct proc_stat *, proc_ptr)
+{
+	struct task_struct *ts; 
+	struct proc_stat ps;		
+	int num_bytes;
+
+	ts = find_task_by_pid_ns(pid, &init_pid_ns);
+	
+	if(ts)
+	{
+		ps.pid = ts->pid;
+		ps.parent_pid = ts->real_parent->pid;
+		ps.user_time = ts->utime;
+		ps.sys_time = ts->stime;
+		ps.state = ts->state;
+		ps.priority = ts->prio;
+		ps.normal_priority = ts->normal_prio;
+		ps.static_priority = ts->static_prio;
+		ps.rt_priority = ts->rt_priority;
+		ps.time_slice = ts->rt.time_slice;
+		ps.policy = ts->policy;
+		ps.num_context_switches = ts->nvcsw + ts->nivcsw;
+		//ps.task_size = ts->mm->task_size;
+		//ps.total_pages_mapped = ts->mm->total_vm;
+		memcpy(ps.name, ts->comm, 16);
+
+		num_bytes = copy_to_user(proc_ptr, &ps ,sizeof(struct proc_stat));	
+		if(num_bytes)
+		{
+			printk(KERN_WARNING "Copy to user failed");
+			return EFAULT;
+		}
+	}
+	else 
+	{
+		printk(KERN_WARNING "Got a null pointer");
+		return ESRCH;
+	}
 
 	return 0;
 }
